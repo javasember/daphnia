@@ -1,0 +1,93 @@
+<html><body>
+<script>
+var ws = new WebSocket('ws://127.0.0.1:8080/daphnia/dsrv', 'main');
+ws.onopen = function(){
+    ws.send('1234#testServicePeer.sayHello("Sanyi")');
+};
+ws.onmessage = function(m){
+    if (m.data) alert(m.data);
+};
+ws.onclose = function() {
+    alert('closed');
+};
+
+daphnia = new function() {
+    var reg = {};
+    
+    var self = {
+        send : function(server, msg, cb) {
+            var ts = new Date().getTime().toString();
+            reg[ts] = cb;
+            ws.send(ts + "#" + msg);
+        }
+    };
+
+    return self;
+};
+
+daphnia.mainServer = new function() {
+    var chn = 'main';
+    var endpoint = 'ws://127.0.0.1:8080/daphnia/dsrv';
+
+    var ws = online = null;
+    var queue = [];
+    
+    var self = {
+        send : function() {
+            var fn = function(msg, cb) {
+                daphnia.send(self, msg, cb);
+            };
+
+            if (online) {
+                fn();
+            } else {
+                queue.push(fn);
+                if (!ws) self._connect();
+            }
+        },
+
+        _connect : function() {
+            if (!ws) {
+                ws = new WebSocket(endpoint, chn);
+                ws.onopen = self._onopen;
+                ws.onmessage = self._onmessage;
+                ws.onerror = self._onerror;
+                ws.onclose = self._onclose;
+            }
+        },
+
+        _onopen : function(o) {
+            while (queue.length > 0) queue.shift()();
+            online = true;
+        },
+
+        _onmessage : function(m) {},
+
+        _onerror : function(e) {
+            alert(e);
+        },
+
+        _onclose : function(c) {
+            ws = online = null;
+        },
+    };
+
+    return self;
+};
+
+testService = new function() {
+    var sn = 'testServicePeer';
+    var self = {
+        sayHello : function(s, cb) {
+            daphnia.send(sn + ".sayHello('" + s + "')", cb);
+        },
+
+        sitty : function(cb) {
+            daphnia.send(sn + ".sitty()", cb);
+        }
+    };
+
+    return self;
+};
+</script>
+</body></html>

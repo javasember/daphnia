@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://www.daphnia.org/daphnia"
+    xmlns:tns="http://www.daphnia.org/daphnia"
+    elementFormDefault="qualified">
+
+
+
+    <element name="server">
+        <complexType>
+            <attribute name="id" type="ID"></attribute>
+            <attribute name="channel" type="string"></attribute>
+        </complexType>
+    </element>
+
+    <element name="service">
+        <complexType>
+            <attribute name="channel" type="string"></attribute>
+        </complexType>
+    </element>
+    
+    <attribute name="channel" type="string"/>
+    <attribute name="publish" type="string"/>
+</schema>
