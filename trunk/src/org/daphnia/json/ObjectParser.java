@@ -78,7 +78,7 @@ public class ObjectParser extends Parser.ElementParser {
 //parse value
             skip(in);
             if (map.containsKey(key)) {
-                value = super.map(in, map.getType(key));
+                value = super.map(in, map.getWriteMethod(key).getGenericParameterTypes()[0]);
                 map.put(key, value);
             } else {
                 super.parse(in);

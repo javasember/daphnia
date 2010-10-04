@@ -1,13 +1,12 @@
 package org.daphnia.json;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Enumeration;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ArrayParser extends Parser.ElementParser {
     public boolean starts(int c) {
@@ -61,6 +60,20 @@ public class ArrayParser extends Parser.ElementParser {
         }
         in.pop();
 
+        return morph(list, t);
+    }
+    
+    private Object morph(List<Object> list, Object t) {
+        if (t instanceof Type)
+            t = t.getClass();
+        if (t instanceof Class) {
+            Class<?> c = (Class<?>) t;
+            if (c.isArray())
+                return list.toArray();
+            if (Set.class.isAssignableFrom(c))
+                return new HashSet<Object>(list);
+        }
+        
         return list;
     }
     
