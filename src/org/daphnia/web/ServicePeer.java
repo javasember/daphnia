@@ -1,6 +1,7 @@
 package org.daphnia.web;
 
-import java.lang.reflect.InvocationTargetException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
@@ -10,10 +11,9 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
+import org.daphnia.json.Parser;
+import org.daphnia.json.Serializer;
 import org.daphnia.web.Server.Peer;
-
-import flexjson.JSONDeserializer;
-import flexjson.JSONSerializer;
 
 public class ServicePeer implements Peer {
     private @Getter @Setter String channel;
@@ -21,6 +21,14 @@ public class ServicePeer implements Peer {
     private @Getter Object service;
     private @Getter Server server;
     private Map<String, Method> methods;
+    
+    private static final Parser parser;
+    private static final Serializer serializer;
+    
+    static {
+        parser = new Parser();
+        serializer = new Serializer();
+    }
 
     public ServicePeer() {
         methods = new HashMap<String, Method>();
@@ -37,7 +45,6 @@ public class ServicePeer implements Peer {
     
     public void setServer(Server s) {
         this.server = s;
-        System.out.println("*************** " + this.name);
         this.server.addPeer(this.name, this);
     }
     
@@ -51,23 +58,24 @@ public class ServicePeer implements Peer {
             String mn = s.substring(0, idx).trim();
             Method m = this.methods.get(mn);
             if (m != null) {
-                Object o = new JSONDeserializer<Object>().deserialize('[' + s.substring(idx + 1, idy) + ']');
+                StringReader in = new StringReader('[' + s.substring(idx + 1, idy) + ']');
                 try {
+                    Object o = parser.map(in, m.getParameterTypes());
                     response = m.invoke(this.service, ((List<?>) o).toArray());
-                } catch (IllegalArgumentException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
+                } catch (Exception e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
         }
 
-        return response == null ? null : new JSONSerializer().serialize(response);
+        StringWriter sw = new StringWriter();
+        try {
+            serializer.serialize(sw, response);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return sw.toString();
     }
 
 }
