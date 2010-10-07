@@ -9,7 +9,7 @@ import lombok.Setter;
 public class Parser {
     private final NumberParser  NP = new NumberParser();
     private final StringParser  SP = new StringParser();
-    private final ArrayParser   AP = new ArrayParser();
+    private final ArrayParser   AP = new ArrayParser(this);
     private final ObjectParser  OP = new ObjectParser(this);
     private final LiteralParser LP = new LiteralParser();
     private final ElementParser EP = new ElementParser(this);

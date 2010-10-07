@@ -22,7 +22,6 @@ public class NumberParser extends Parser.ElementParser {
     
     protected Object map(StepReader in, Object t) throws Exception {
         Number n = parse(in);
-        if (t instanceof Type) t = t.getClass();
         if (t == Byte.class) {
             return n.byteValue();
         } else if (t == Integer.class) {

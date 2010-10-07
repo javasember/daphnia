@@ -1,0 +1,13 @@
+{
+    "name" : "Test",
+    "version" : 123.344,
+    "members" : [
+        {
+            "name" : "John",
+            "age" : 34
+        },{
+            "name" : "Jane",
+            "age" : 31
+        }
+    ]
+}
