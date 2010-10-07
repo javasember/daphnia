@@ -1,6 +1,5 @@
 package org.daphnia.json;
 
-import java.lang.reflect.Type;
 import java.text.NumberFormat;
 
 public class NumberParser extends Parser.ElementParser {
