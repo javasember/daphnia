@@ -56,11 +56,14 @@ public class ObjectParser extends Parser.ElementParser {
     }
     
     protected Object map(StepReader in, Object t) throws Exception {
-        Object o = t;
-        if (t instanceof Class) {
-            o = ((Class<?>) t).newInstance();
+        Object o;
+        Map<String, Object> map = null;
+        BeanMap bm = null;
+        try {
+            bm = new BeanMap(o = ((Class<?>) t).newInstance());
+        } catch (Exception e) {
+            o = map = new HashMap<String, Object>();
         }
-        BeanMap map = new BeanMap(o);
 
 //step over {
         in.pop();
@@ -77,11 +80,15 @@ public class ObjectParser extends Parser.ElementParser {
             in.pop();
 //parse value
             skip(in);
-            if (map.containsKey(key)) {
-                value = super.map(in, map.getWriteMethod(key).getGenericParameterTypes()[0]);
-                map.put(key, value);
+            if (bm != null) {
+                if (bm.containsKey(key)) {
+                    value = super.map(in, bm.getWriteMethod(key).getGenericParameterTypes()[0]);
+                    bm.put(key, value);
+                } else {
+                    super.parse(in);
+                }
             } else {
-                super.parse(in);
+                map.put(key, super.parse(in));
             }
             skip(in);
 //check ,
@@ -98,6 +105,6 @@ public class ObjectParser extends Parser.ElementParser {
 //step over }
         in.pop();
         
-        return map.getBean();
+        return o;
     }
 }

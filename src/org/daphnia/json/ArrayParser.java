@@ -1,5 +1,6 @@
 package org.daphnia.json;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -9,6 +10,10 @@ import java.util.List;
 import java.util.Set;
 
 public class ArrayParser extends Parser.ElementParser {
+    protected ArrayParser(Parser p) {
+        super(p);
+    }
+
     public boolean starts(int c) {
         return (c == '[');
     }
@@ -64,12 +69,14 @@ public class ArrayParser extends Parser.ElementParser {
     }
     
     private Object morph(List<Object> list, Object t) {
-        if (t instanceof Type)
-            t = t.getClass();
+        if (t instanceof ParameterizedType)
+            t = ((ParameterizedType) t).getRawType();
         if (t instanceof Class) {
             Class<?> c = (Class<?>) t;
-            if (c.isArray())
-                return list.toArray();
+            if (c.isArray()) {
+                Object[] a = (Object[]) Array.newInstance(c.getComponentType(), list.size());
+                return list.toArray(a);
+            }
             if (Set.class.isAssignableFrom(c))
                 return new HashSet<Object>(list);
         }
@@ -83,33 +90,28 @@ public class ArrayParser extends Parser.ElementParser {
         int cnt = 0;
         
         public TypeIterator(Object t) {
-            if (t instanceof Type) {
-                if (t instanceof ParameterizedType) {
-                    Type[] ta = ((ParameterizedType) t).getActualTypeArguments();
-                    if (ta != null && ta.length > 0) {
-                        cls = ta[0];
-                    }
-                } else t = t.getClass();
-            }
-            if (clsa == null && cls == null && t instanceof Class) {
-                Class<?> c = (Class<?>) t;
-                if (c.isArray()) {
-                    cls = c.getComponentType();
-                } else if (Collection.class.isAssignableFrom(c)) {
-                    cls = null;
-                } else {
-                    cls = c;
+            if (t instanceof ParameterizedType) {
+                Type[] ta = ((ParameterizedType) t).getActualTypeArguments();
+                if (ta != null && ta.length > 0) {
+                    cls = ta[0];
                 }
             }
             if (clsa == null && cls == null) {
-                if (t.getClass().isArray()) {
-                    if (t.getClass().getComponentType() instanceof Class || t.getClass().getComponentType() instanceof Type) {
-                        clsa = (Object[]) t;
+                if (t instanceof Class) {
+                    Class<?> c = (Class<?>) t;
+                    if (c.isArray()) {
+                        cls = c.getComponentType();
+                    } else if (Collection.class.isAssignableFrom(c)) {
+                        cls = null;
                     } else {
-                        cls = t.getClass().getComponentType();
+                        cls = c;
                     }
                 } else {
-                    cls = t.getClass();
+                    if (t.getClass().isArray()) {
+                        clsa = (Object[]) t;
+                    } else {
+                        cls = t.getClass();
+                    }
                 }
             }
         }
@@ -120,3 +122,5 @@ public class ArrayParser extends Parser.ElementParser {
 
     }
 }
+
+    
